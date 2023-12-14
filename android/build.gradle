@@ -29,7 +29,7 @@ android {
         namespace 'com.kjxbyz.plugins.jpush'
     }
 
-    compileSdkVersion 34
+    compileSdkVersion 33
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

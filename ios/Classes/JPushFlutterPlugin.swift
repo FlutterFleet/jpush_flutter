@@ -3,7 +3,7 @@ import UIKit
 
 public class JPushFlutterPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "plugins.expertplanet.io/jpush_flutter_plugin", binaryMessenger: registrar.messenger())
+    let channel = FlutterMethodChannel(name: "plugins.kjxbyz.com/jpush_flutter_plugin", binaryMessenger: registrar.messenger())
     let instance = JPushFlutterPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
