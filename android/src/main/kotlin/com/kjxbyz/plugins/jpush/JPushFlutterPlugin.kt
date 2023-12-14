@@ -15,7 +15,7 @@ class JPushFlutterPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "plugins.expertplanet.io/jpush_flutter_plugin")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "plugins.kjxbyz.com/jpush_flutter_plugin")
     channel.setMethodCallHandler(this)
   }
 
