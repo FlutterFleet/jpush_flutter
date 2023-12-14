@@ -1,6 +1,9 @@
+import 'package:flutter/services.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'jpush_flutter_method_channel.dart';
+
+typedef JPushFlutterPluginHandler = void Function(MethodCall call);
 
 abstract class JPushFlutterPlatform extends PlatformInterface {
   /// Constructs a JPushFlutterPlatform.
@@ -23,7 +26,15 @@ abstract class JPushFlutterPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
-  }
+  void setMethodCallHandler(JPushFlutterPluginHandler handler);
+
+  Future<void> setDebugMode(bool debugMode);
+
+  Future<void> setAuth(bool auth);
+
+  Future<void> init(String appKey, String channel);
+
+  Future<void> setAlias(int sequence, String alias);
+
+  Future<void> deleteAlias(int sequence);
 }
