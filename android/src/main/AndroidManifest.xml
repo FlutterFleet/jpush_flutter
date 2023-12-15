@@ -34,7 +34,7 @@
             android:exported="false" >
             <intent-filter>
                 <action android:name="cn.jpush.android.intent.SERVICE_MESSAGE" />
-                <category android:name="您应用的包名" />
+                <category android:name="${packageName}" />
             </intent-filter>
         </service>
 
