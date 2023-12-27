@@ -3,7 +3,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'jpush_flutter_method_channel.dart';
 
-typedef JPushFlutterPluginHandler = void Function(MethodCall call);
+typedef JPushFlutterPluginHandler = Future<void> Function(MethodCall call);
 
 abstract class JPushFlutterPlatform extends PlatformInterface {
   /// Constructs a JPushFlutterPlatform.

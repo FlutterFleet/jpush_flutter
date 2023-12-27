@@ -1,10 +1,22 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:jpush_flutter/jpush_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  JPushFlutter.setMethodCallHandler((call) async {
+    if (call.method == 'notificationClick') {
+      if (kDebugMode) {
+        print('setMethodCallHandler: ${call.arguments}');
+      }
+    }
+  });
+  JPushFlutter.setDebugMode(debugMode: true);
+  JPushFlutter.init('cd04621e5858bdfffb42bad6', 'developer-default');
+
   runApp(const MyApp());
 }
 
@@ -20,18 +32,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      JPushFlutter.setMethodCallHandler((call) { });
-    } on PlatformException catch (e) {
-      debugPrint(e.message);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await Permission.notification.request();
+    });
   }
 
   @override
@@ -47,4 +50,5 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
 }
