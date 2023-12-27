@@ -1,27 +1,38 @@
 PODS:
   - Flutter (1.0.0)
-  - integration_test (0.0.1):
-    - Flutter
+  - JCore (4.4.2)
+  - JPush (5.2.0):
+    - JCore (>= 2.0.0)
   - jpush_flutter (0.0.1):
+    - Flutter
+    - JPush (= 5.2.0)
+  - permission_handler_apple (9.1.1):
     - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - jpush_flutter (from `.symlinks/plugins/jpush_flutter/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+
+SPEC REPOS:
+  trunk:
+    - JCore
+    - JPush
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  integration_test:
-    :path: ".symlinks/plugins/integration_test/ios"
   jpush_flutter:
     :path: ".symlinks/plugins/jpush_flutter/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  integration_test: 13825b8a9334a850581300559b8839134b124670
-  jpush_flutter: 04d8b2c47d388f13fe41eada6f94d610f2532d4e
+  JCore: 2e7dd256415fb32398489968202c0066ad5c13db
+  JPush: 76668b765fcfd7c15f86b05ca0e5cdc01945ce23
+  jpush_flutter: 5add1d24a24be16ea98f3ac84118dc1744468a90
+  permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
 
 PODFILE CHECKSUM: 70d9d25280d0dd177a5f637cdb0f0b0b12c6a189
 

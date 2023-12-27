@@ -13,15 +13,15 @@ JPush for Flutter.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'kjxbyz' => 'kjxbyz@163.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.xcconfig = {
-    'LIBRARY_SEARCH_PATHS' => '$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)/ $(SDKROOT)/usr/lib/swift',
-    'LD_RUNPATH_SEARCH_PATHS' => '/usr/lib/swift',
-  }
+  s.source_files = 'Classes/**/*.{h,m}'
+  s.public_header_files = 'Classes/**/*.h'
+  s.module_map = 'Classes/JPushFlutterPlugin.modulemap'
+  s.static_framework = true
   s.dependency 'Flutter'
+  s.dependency 'JPush', '5.2.0'
   s.platform = :ios, '11.0'
+  s.ios.deployment_target = '11.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
-  s.swift_version = '5.0'
 end
