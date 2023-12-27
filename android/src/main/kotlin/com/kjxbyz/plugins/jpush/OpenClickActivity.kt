@@ -89,6 +89,7 @@ public class OpenClickActivity : Activity() {
             }
             //主线程中调用：
             mHandler.postDelayed(r, 100) //延时100毫秒
+            finish()
         } catch (e: Exception) {
             Log.w(TAG, "parse notification error")
         }
