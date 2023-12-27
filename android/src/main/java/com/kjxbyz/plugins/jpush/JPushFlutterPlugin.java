@@ -3,16 +3,25 @@ package com.kjxbyz.plugins.jpush;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kjxbyz.plugins.jpush.helper.JPushHelper;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import cn.jiguang.api.utils.JCollectionAuth;
 import cn.jpush.android.api.JPushInterface;
 import cn.jpush.android.data.JPushConfig;
+import cn.jpush.android.ups.JPushUPSManager;
+import cn.jpush.android.ups.TokenResult;
+import cn.jpush.android.ups.UPSTurnCallBack;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -27,6 +36,13 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     private static final String METHOD_SET_DEBUG_MODE = "setDebugMode";
     private static final String METHOD_SET_AUTH = "setAuth";
     private static final String METHOD_INIT = "init";
+    private static final String METHOD_REGISTER_TOKEN = "registerToken";
+    private static final String METHOD_UNREGISTER_TOKEN = "unRegisterToken";
+    private static final String METHOD_TURN_OFF_PUSH = "turnOffPush";
+    private static final String METHOD_TURN_ON_PUSH = "turnOnPush";
+    private static final String METHOD_STOP_PUSH = "stopPush";
+    private static final String METHOD_RESUME_PUSH = "resumePush";
+    private static final String METHOD_IS_PUSH_STOPPED = "isPushStopped";
     private static final String METHOD_SET_ALIAS = "setAlias";
     private static final String METHOD_DELETE_ALIAS = "deleteAlias";
 
@@ -47,7 +63,9 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     @VisibleForTesting
     public void initInstance(BinaryMessenger messenger, Context context) {
         channel = new MethodChannel(messenger, CHANNEL_NAME);
-        JPushHelper.getInstance().setContext(context).setChannel(channel);
+        JPushHelper.getInstance().setContext(context);
+        JPushHelper.getInstance().setChannel(channel);
+        this.context = context;
         delegate = new Delegate(context);
         channel.setMethodCallHandler(this);
     }
@@ -70,7 +88,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     }
 
     @Override
-    public void onAttachedToActivity(ActivityPluginBinding activityPluginBinding) {
+    public void onAttachedToActivity(@NonNull ActivityPluginBinding activityPluginBinding) {
         attachToActivity(activityPluginBinding);
     }
 
@@ -80,7 +98,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     }
 
     @Override
-    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding activityPluginBinding) {
+    public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding activityPluginBinding) {
         attachToActivity(activityPluginBinding);
     }
 
@@ -105,6 +123,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     }
 
     private void dispose() {
+        context = null;
         delegate = null;
         channel.setMethodCallHandler(null);
         channel = null;
@@ -124,10 +143,33 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 boolean auth = call.argument("auth");
                 delegate.setAuth(auth, result);
                 break;
+            case METHOD_REGISTER_TOKEN:
+                String appId = call.argument("appId");
+                String channelVal = call.argument("channel");
+                delegate.registerToken(appId, channelVal, result);
+                break;
+            case METHOD_UNREGISTER_TOKEN:
+                delegate.unRegisterToken(result);
+                break;
+            case METHOD_TURN_OFF_PUSH:
+                delegate.turnOffPush(result);
+                break;
+            case METHOD_TURN_ON_PUSH:
+                delegate.turnOnPush(result);
+                break;
             case METHOD_INIT:
                 String appKey = call.argument("appKey");
                 String channel = call.argument("channel");
                 delegate.init(appKey, channel, result);
+                break;
+            case METHOD_STOP_PUSH:
+                delegate.stopPush(result);
+                break;
+            case METHOD_RESUME_PUSH:
+                delegate.resumePush(result);
+                break;
+            case METHOD_IS_PUSH_STOPPED:
+                delegate.isPushStopped(result);
                 break;
             case METHOD_SET_ALIAS:
                 int sequence = call.argument("sequence");
@@ -148,19 +190,58 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         /**
          * 该接口需在 init 接口之前调用，避免出现部分日志没打印的情况.
          */
-        public void setDebugMode(boolean debugMode, MethodChannel.Result result);
+        void setDebugMode(boolean debugMode, MethodChannel.Result result);
 
         /**
          * 隐私确认接口
-         * @param auth
-         * @param result
          */
         public void setAuth(boolean auth, MethodChannel.Result result);
 
         /**
-         * 调用了本 API 后，JPush 推送服务进行初始化.
+         * 注册接口.
+         */
+        public void registerToken(String appId, String channel, MethodChannel.Result result);
+
+        /**
+         * 调用此接口后，会停用所有 Push SDK 提供的功能。需通过 registerToken 接口或者重新安装应用才可恢复.
+         */
+        public void unRegisterToken(MethodChannel.Result result);
+
+        /**
+         * 调用了本 API 后，JPush 推送服务完全被停止。具体表现为：
+         * 收不到推送消息
+         * 极光推送所有的其他 API 调用都无效，需要调用 cn.jpush.android.ups.JPushUPSManager.turnOnPush 恢复.
+         */
+        public void turnOffPush(MethodChannel.Result result);
+
+        /**
+         * 调用了此 API 后，极光推送完全恢复正常工作.
+         */
+        public void turnOnPush(MethodChannel.Result result);
+
+        /**
+         * 初始化极光推送服务，调用了本 API 后，开启JPush 推送服务，将会开始收集上报SDK业务功能所必要的用户个人信息。
+         * 建议在自定义的 Application 中的 onCreate 中调用。 该 API 支持动态设置极光 AppKey 与各厂商 AppId。
+         * 注：如使用该接口配置 AppKey 进行初始化，则 build.gradle 文件中 JPUSH_APPKEY 则不需再配置，即 JPUSH_APPKEY : ""。.
          */
         public void init(String appKey, String channel, MethodChannel.Result result);
+
+        /**
+         * 调用了本 API 后，JPush 推送服务完全被停止.
+         * 1. 收不到推送消息
+         * 2. 极光推送所有的其他 API 调用都无效，不能通过 JPushInterface.init 恢复，需要调用 resumePush 恢复
+         */
+        public void stopPush(MethodChannel.Result result);
+
+        /**
+         * 调用了此 API 后，极光推送完全恢复正常工作.
+         */
+        public void resumePush(MethodChannel.Result result);
+
+        /**
+         * 检查推送是否被停止.
+         */
+        public void isPushStopped(MethodChannel.Result result);
 
         /**
          * 调用此 API 来设置别名。
@@ -176,9 +257,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     }
 
     public static class Delegate implements IDelegate, PluginRegistry.ActivityResultListener {
-        public static final String SET_DEBUG_MODE_FAILED = "SET_DEBUG_MODE_FAILED";
-        public static final String SET_AUTH_FAILED = "SET_AUTH_FAILED";
-        public static final String INIT_FAILED = "INIT_FAILED";
+        private static final String TAG = "Delegate";
 
         private final Context context;
 
@@ -217,54 +296,181 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 JPushInterface.setDebugMode(debugMode);
                 result.success(null);
             } catch (Exception e) {
-                result.error(SET_DEBUG_MODE_FAILED, e.getMessage(), e.getStackTrace());
+                result.error(METHOD_SET_DEBUG_MODE, e.getMessage(), e.getStackTrace());
             }
         }
 
         @Override
         public void setAuth(boolean auth, MethodChannel.Result result) {
-            if (this.context == null) return;
+            if (this.context == null) {
+                Log.e(TAG, "[setAuth]: context is null");
+                return;
+            }
             try {
                 JCollectionAuth.setAuth(this.context, auth);
                 result.success(null);
             } catch (Exception e) {
-                result.error(SET_AUTH_FAILED, e.getMessage(), e.getStackTrace());
+                result.error(METHOD_SET_AUTH, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void registerToken(String appId, String channel, MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[registerToken]: context is null");
+                return;
+            }
+            try {
+                JPushUPSManager.registerToken(this.context, appId, null, "", tokenResult -> {
+                    Log.i(TAG, "[registerToken]: token is " + tokenResult.getToken() + ", code is " + tokenResult.getReturnCode() + ", type is " + tokenResult.getActionType());
+                    if (tokenResult.getReturnCode() == 0 && channel != null && !channel.isEmpty()) {
+                        JPushInterface.setChannel(this.context, channel);
+                    }
+                    result.success(tokenResult.getReturnCode());
+                });
+            } catch (Exception e) {
+                result.error(METHOD_REGISTER_TOKEN, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void unRegisterToken(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[unRegisterToken]: context is null");
+                return;
+            }
+            try {
+                JPushUPSManager.unRegisterToken(this.context, tokenResult -> {
+                    Log.i(TAG, "[unRegisterToken]: token is " + tokenResult.getToken() + ", code is " + tokenResult.getReturnCode() + ", type is " + tokenResult.getActionType());
+                    result.success(tokenResult.getReturnCode());
+                });
+            } catch (Exception e) {
+                result.error(METHOD_UNREGISTER_TOKEN, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void turnOffPush(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[turnOffPush]: context is null");
+                return;
+            }
+            try {
+                JPushUPSManager.turnOffPush(this.context, tokenResult -> {
+                    Log.i(TAG, "[turnOffPush]: token is " + tokenResult.getToken() + ", code is " + tokenResult.getReturnCode() + ", type is " + tokenResult.getActionType());
+                    result.success(tokenResult.getReturnCode());
+                });
+            } catch (Exception e) {
+                result.error(METHOD_TURN_OFF_PUSH, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void turnOnPush(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[turnOnPush]: context is null");
+                return;
+            }
+            try {
+                JPushUPSManager.turnOnPush(this.context, tokenResult -> {
+                    Log.i(TAG, "[turnOnPush]: token is " + tokenResult.getToken() + ", code is " + tokenResult.getReturnCode() + ", type is " + tokenResult.getActionType());
+                    result.success(tokenResult.getReturnCode());
+                });
+            } catch (Exception e) {
+                result.error(METHOD_TURN_ON_PUSH, e.getMessage(), e.getStackTrace());
             }
         }
 
         @Override
         public void init(String appKey, String channel, MethodChannel.Result result) {
-            if (this.context == null) return;
+            if (this.context == null) {
+                Log.e(TAG, "[init]: context is null");
+                return;
+            }
             try {
-                JPushConfig config = new JPushConfig();
-                config.setjAppKey(appKey);
-                JPushInterface.init(this.context);
-//                JPushInterface.setChannel(this.context, channel);
+                if (appKey != null && !appKey.trim().isEmpty()) {
+                    JPushConfig config = new JPushConfig();
+                    config.setjAppKey(appKey);
+                    JPushInterface.init(this.context, config);
+                } else {
+                    JPushInterface.init(this.context);
+                }
+                if (appKey != null && !appKey.trim().isEmpty()) {
+                    JPushInterface.setChannel(this.context, channel);
+                }
                 result.success(null);
             } catch (Exception e) {
-                result.error(INIT_FAILED, e.getMessage(), e.getStackTrace());
+                result.error(METHOD_INIT, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void stopPush(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[stopPush]: context is null");
+                return;
+            }
+            try {
+                JPushInterface.stopPush(this.context);
+                result.success(null);
+            } catch (Exception e) {
+                result.error(METHOD_STOP_PUSH, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void resumePush(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[resumePush]: context is null");
+                return;
+            }
+            try {
+                JPushInterface.resumePush(this.context);
+                result.success(null);
+            } catch (Exception e) {
+                result.error(METHOD_RESUME_PUSH, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        @Override
+        public void isPushStopped(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[isPushStopped]: context is null");
+                return;
+            }
+            try {
+                boolean isPushStopped = JPushInterface.isPushStopped(this.context);
+                result.success(isPushStopped);
+            } catch (Exception e) {
+                result.error(METHOD_IS_PUSH_STOPPED, e.getMessage(), e.getStackTrace());
             }
         }
 
         @Override
         public void setAlias(int sequence, String alias, MethodChannel.Result result) {
-            if (this.context == null) return;
+            if (this.context == null) {
+                Log.e(TAG, "[setAlias]: context is null");
+                return;
+            }
             try {
                 JPushInterface.setAlias(this.context, sequence, alias);
                 result.success(null);
             } catch (Exception e) {
-                result.error(INIT_FAILED, e.getMessage(), e.getStackTrace());
+                result.error(METHOD_SET_ALIAS, e.getMessage(), e.getStackTrace());
             }
         }
 
         @Override
         public void deleteAlias(int sequence, MethodChannel.Result result) {
-            if (this.context == null) return;
+            if (this.context == null) {
+                Log.e(TAG, "[deleteAlias]: context is null");
+                return;
+            }
             try {
                 JPushInterface.deleteAlias(this.context, sequence);
                 result.success(null);
             } catch (Exception e) {
-                result.error(INIT_FAILED, e.getMessage(), e.getStackTrace());
+                result.error(METHOD_DELETE_ALIAS, e.getMessage(), e.getStackTrace());
             }
         }
     }

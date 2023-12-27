@@ -18,7 +18,28 @@ class MockJPushFlutterPlatform
   Future<void> setAuth(bool auth) => Future.value();
 
   @override
+  Future<int?> registerToken(String appId, String channel) => Future.value(0);
+
+  @override
+  Future<int?> unRegisterToken() => Future.value(0);
+
+  @override
+  Future<int?> turnOffPush() => Future.value(0);
+
+  @override
+  Future<int?> turnOnPush() => Future.value(0);
+
+  @override
   Future<void> init(String appKey, String channel) => Future.value();
+
+  @override
+  Future<void> stopPush() => Future.value();
+
+  @override
+  Future<void> resumePush() => Future.value();
+
+  @override
+  Future<bool> isPushStopped() => Future.value(true);
 
   @override
   Future<void> setAlias(int sequence, String alias) => Future.value();

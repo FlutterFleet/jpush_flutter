@@ -32,7 +32,21 @@ abstract class JPushFlutterPlatform extends PlatformInterface {
 
   Future<void> setAuth(bool auth);
 
+  Future<int?> registerToken(String appId, String channel);
+
+  Future<int?> unRegisterToken();
+
+  Future<int?> turnOffPush();
+
+  Future<int?> turnOnPush();
+
   Future<void> init(String appKey, String channel);
+
+  Future<void> stopPush();
+
+  Future<void> resumePush();
+
+  Future<bool?> isPushStopped();
 
   Future<void> setAlias(int sequence, String alias);
 
