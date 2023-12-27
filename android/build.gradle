@@ -55,10 +55,24 @@ android {
         }
     }
 
+    flavorDimensions "default"
+    productFlavors {
+        // 国内分发
+        internal {
+            dimension "default"
+        }
+
+        // 国外分发
+        external {
+            dimension "default"
+        }
+    }
+
     dependencies {
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'
-        implementation 'cn.jiguang.sdk:jpush:5.2.2' // 必选，此处以JPush 5.2.2 版本为例，注意：5.0.0 版本开始可以自动拉取 JCore 包，无需另外配置
+        internalImplementation 'cn.jiguang.sdk:jpush:5.2.2'
+        externalImplementation 'cn.jiguang.sdk:jpush-google:5.2.2'
         implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.3'
     }
 

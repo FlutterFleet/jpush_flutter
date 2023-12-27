@@ -56,6 +56,19 @@ android {
         ]
     }
 
+    flavorDimensions "default"
+    productFlavors {
+        // 国内分发
+        internal {
+            dimension "default"
+        }
+
+        // 国外分发
+        external {
+            dimension "default"
+        }
+    }
+
     buildTypes {
 //        release {
 //            signingConfig signingConfigs.release
