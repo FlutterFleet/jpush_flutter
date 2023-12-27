@@ -8,10 +8,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.kjxbyz.plugins.jpush.helper.MessageOperatorHelper;
+import com.kjxbyz.plugins.jpush.helper.JPushHelper;
 
 import cn.jiguang.api.utils.JCollectionAuth;
 import cn.jpush.android.api.JPushInterface;
+import cn.jpush.android.data.JPushConfig;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -23,7 +24,6 @@ import io.flutter.plugin.common.PluginRegistry;
 
 public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
     private static final String CHANNEL_NAME = "plugins.kjxbyz.com/jpush_flutter_plugin";
-    private static final String METHOD_GET_PLATFORM_NAME = "getPlatformName";
     private static final String METHOD_SET_DEBUG_MODE = "setDebugMode";
     private static final String METHOD_SET_AUTH = "setAuth";
     private static final String METHOD_INIT = "init";
@@ -40,13 +40,14 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     public static void registerWith(PluginRegistry.Registrar registrar) {
         JPushFlutterPlugin instance = new JPushFlutterPlugin();
         instance.initInstance(registrar.messenger(), registrar.context());
+        JPushHelper.getInstance().setRegistrar(registrar);
         instance.setUpRegistrar(registrar);
     }
 
     @VisibleForTesting
     public void initInstance(BinaryMessenger messenger, Context context) {
         channel = new MethodChannel(messenger, CHANNEL_NAME);
-        MessageOperatorHelper.getInstance().setChannel(channel);
+        JPushHelper.getInstance().setContext(context).setChannel(channel);
         delegate = new Delegate(context);
         channel.setMethodCallHandler(this);
     }
@@ -54,6 +55,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     @VisibleForTesting
     @SuppressWarnings("deprecation")
     public void setUpRegistrar(PluginRegistry.Registrar registrar) {
+        JPushHelper.getInstance().setRegistrar(registrar);
         delegate.setUpRegistrar(registrar);
     }
 
@@ -90,11 +92,14 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     private void attachToActivity(ActivityPluginBinding activityPluginBinding) {
         this.activityPluginBinding = activityPluginBinding;
         activityPluginBinding.addActivityResultListener(delegate);
-        delegate.setActivity(activityPluginBinding.getActivity());
+        Activity activity = activityPluginBinding.getActivity();
+        JPushHelper.getInstance().setActivity(activity);
+        delegate.setActivity(activity);
     }
 
     private void disposeActivity() {
         activityPluginBinding.removeActivityResultListener(delegate);
+        JPushHelper.getInstance().setActivity(null);
         delegate.setActivity(null);
         activityPluginBinding = null;
     }
@@ -103,15 +108,14 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         delegate = null;
         channel.setMethodCallHandler(null);
         channel = null;
-        MessageOperatorHelper.getInstance().setChannel(null);
+        JPushHelper.getInstance().setContext(null);
+        JPushHelper.getInstance().setRegistrar(null);
+        JPushHelper.getInstance().setChannel(null);
     }
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         switch (call.method) {
-            case METHOD_GET_PLATFORM_NAME:
-                delegate.getPlatformName(result);
-                break;
             case METHOD_SET_DEBUG_MODE:
                 boolean debugMode = call.argument("debugMode");
                 delegate.setDebugMode(debugMode, result);
@@ -121,7 +125,9 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 delegate.setAuth(auth, result);
                 break;
             case METHOD_INIT:
-                delegate.init(result);
+                String appKey = call.argument("appKey");
+                String channel = call.argument("channel");
+                delegate.init(appKey, channel, result);
                 break;
             case METHOD_SET_ALIAS:
                 int sequence = call.argument("sequence");
@@ -140,11 +146,6 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     public interface IDelegate {
 
         /**
-         * 获取宿主平台名称.
-         */
-        public void getPlatformName(MethodChannel.Result result);
-
-        /**
          * 该接口需在 init 接口之前调用，避免出现部分日志没打印的情况.
          */
         public void setDebugMode(boolean debugMode, MethodChannel.Result result);
@@ -159,7 +160,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         /**
          * 调用了本 API 后，JPush 推送服务进行初始化.
          */
-        public void init(MethodChannel.Result result);
+        public void init(String appKey, String channel, MethodChannel.Result result);
 
         /**
          * 调用此 API 来设置别名。
@@ -211,11 +212,6 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         }
 
         @Override
-        public void getPlatformName(MethodChannel.Result result) {
-            result.success("Android");
-        }
-
-        @Override
         public void setDebugMode(boolean debugMode, MethodChannel.Result result) {
             try {
                 JPushInterface.setDebugMode(debugMode);
@@ -237,10 +233,13 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         }
 
         @Override
-        public void init(MethodChannel.Result result) {
+        public void init(String appKey, String channel, MethodChannel.Result result) {
             if (this.context == null) return;
             try {
+                JPushConfig config = new JPushConfig();
+                config.setjAppKey(appKey);
                 JPushInterface.init(this.context);
+//                JPushInterface.setChannel(this.context, channel);
                 result.success(null);
             } catch (Exception e) {
                 result.error(INIT_FAILED, e.getMessage(), e.getStackTrace());

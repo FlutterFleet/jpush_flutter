@@ -9,6 +9,7 @@ import android.text.TextUtils
 import android.util.Log
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.kjxbyz.plugins.jpush.helper.JPushHelper
 
 public class OpenClickActivity : Activity() {
 
@@ -76,7 +77,15 @@ public class OpenClickActivity : Activity() {
             response["extras"] = extras
             val mHandler = Handler(Looper.getMainLooper())
             val r = Runnable { //do something
-//                channel?.invokeMethod("notificationClick", objectMapper.writeValueAsString(response))
+                Log.v(TAG, "[OpenClickActivity]: notificationClick-----")
+                val channel = JPushHelper.getInstance().channel
+//                val activity = JPushHelper.getInstance().activity
+//                val context = JPushHelper.getInstance().context
+//                val intent = Intent(context, activity.javaClass)
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                context.startActivity(intent)
+//                finish()
+                channel?.invokeMethod("notificationClick", objectMapper.writeValueAsString(response))
             }
             //主线程中调用：
             mHandler.postDelayed(r, 100) //延时100毫秒

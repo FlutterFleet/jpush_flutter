@@ -2,14 +2,16 @@
   package="com.kjxbyz.plugins.jpush">
 
     <permission
-        android:name="${packageName}.permission.JPUSH_MESSAGE"
+        android:name="${applicationId}.permission.JPUSH_MESSAGE"
         android:protectionLevel="signature" />
-    <uses-permission android:name="${packageName}.permission.JPUSH_MESSAGE" />
+    <uses-permission android:name="${applicationId}.permission.JPUSH_MESSAGE" />
 
     <!-- 网络权限 （必选）-->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 查看网络状态，sdk重连机制等需要使用-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 适配Android 13，应用弹出通知必须权限-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
         <!-- Since JCore2.0.0 Required SDK核心功能-->
@@ -34,7 +36,7 @@
             android:exported="false" >
             <intent-filter>
                 <action android:name="cn.jpush.android.intent.SERVICE_MESSAGE" />
-                <category android:name="${packageName}" />
+                <category android:name="${applicationId}" />
             </intent-filter>
         </service>
 
@@ -45,7 +47,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <action android:name="com.example.jpushdemo.OpenClickActivity" />
             </intent-filter>
         </activity>
     </application>

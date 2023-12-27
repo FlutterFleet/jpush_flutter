@@ -2,6 +2,10 @@
 
 Demonstrates how to use the jpush_flutter plugin.
 
+Android点击通知打开:
+
+`intent:#Intent;action=com.kjxbyz.plugins.jpush_flutter_example/com.kjxbyz.plugins.jpush.OpenClickActivity;component=com.kjxbyz.plugins.jpush_flutter_example/com.kjxbyz.plugins.jpush.OpenClickActivity;end`
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

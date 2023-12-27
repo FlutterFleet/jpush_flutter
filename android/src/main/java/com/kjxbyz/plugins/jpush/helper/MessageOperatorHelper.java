@@ -1,6 +1,5 @@
 package com.kjxbyz.plugins.jpush.helper;
 
-import android.annotation.SuppressLint;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -11,8 +10,6 @@ import io.flutter.plugin.common.MethodChannel;
 
 public final class MessageOperatorHelper {
     private static final String TAG = "MessageOperatorHelper";
-
-    private MethodChannel channel;
 
     private MessageOperatorHelper() {
     }
@@ -25,11 +22,8 @@ public final class MessageOperatorHelper {
         private static final MessageOperatorHelper instance = new MessageOperatorHelper();
     }
 
-    public void setChannel(MethodChannel channel) {
-        this.channel = channel;
-    }
-
     public void sendCustomMessage(CustomMessage message) {
+        MethodChannel channel = JPushHelper.getInstance().getChannel();
         if (channel == null) {
             Log.e(TAG, "Please call the 'setChannel()' method first.");
             return;
@@ -46,6 +40,7 @@ public final class MessageOperatorHelper {
     }
 
     public void sendNotificationMessage(NotificationMessage message) {
+        MethodChannel channel = JPushHelper.getInstance().getChannel();
         if (channel == null) {
             Log.e(TAG, "Please call the 'setChannel()' method first.");
             return;
