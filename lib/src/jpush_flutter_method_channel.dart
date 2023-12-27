@@ -31,11 +31,49 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
   }
 
   @override
+  Future<int?> registerToken(String appId, String channel) {
+    return methodChannel.invokeMethod<int>('registerToken', {
+      'appId': appId,
+      'channel': channel,
+    });
+  }
+
+  @override
+  Future<int?> unRegisterToken() {
+    return methodChannel.invokeMethod<int>('unRegisterToken');
+  }
+
+  @override
+  Future<int?> turnOffPush() {
+    return methodChannel.invokeMethod<int>('turnOffPush');
+  }
+
+  @override
+  Future<int?> turnOnPush() {
+    return methodChannel.invokeMethod<int>('turnOnPush');
+  }
+
+  @override
   Future<void> init(String appKey, String channel) {
     return methodChannel.invokeMethod<void>('init', {
       'appKey': appKey,
       'channel': channel,
     });
+  }
+
+  @override
+  Future<void> stopPush() {
+    return methodChannel.invokeMethod<void>('stopPush');
+  }
+
+  @override
+  Future<void> resumePush() {
+    return methodChannel.invokeMethod<void>('resumePush');
+  }
+
+  @override
+  Future<bool?> isPushStopped() {
+    return methodChannel.invokeMethod<bool>('isPushStopped');
   }
 
   @override

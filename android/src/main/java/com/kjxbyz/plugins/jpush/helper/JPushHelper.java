@@ -26,25 +26,21 @@ public class JPushHelper {
         private static final JPushHelper instance = new JPushHelper();
     }
 
-    public JPushHelper setContext(Context context) {
+    public void setContext(Context context) {
         this.context = context;
-        return this;
     }
 
-    public JPushHelper setChannel(MethodChannel channel) {
+    public void setChannel(MethodChannel channel) {
         this.channel = channel;
-        return this;
     }
 
     @SuppressWarnings("deprecation")
-    public JPushHelper setRegistrar(PluginRegistry.Registrar registrar) {
+    public void setRegistrar(PluginRegistry.Registrar registrar) {
         this.registrar = registrar;
-        return this;
     }
 
-    public JPushHelper setActivity(Activity activity) {
+    public void setActivity(Activity activity) {
         this.activity = activity;
-        return this;
     }
 
     public Context getContext() {
