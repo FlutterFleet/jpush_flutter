@@ -1,7 +1,9 @@
 name: jpush_flutter
 description: "JPush for Flutter."
 version: 0.0.1
-homepage:
+repository: https://github.com/FlutterFleet/jpush_flutter
+issue_tracker: https://github.com/FlutterFleet/jpush_flutter/issues
+homepage: https://github.com/FlutterFleet/jpush_flutter
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
