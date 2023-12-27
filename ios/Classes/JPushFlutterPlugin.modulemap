@@ -1,0 +1,10 @@
+framework module jpush_flutter {
+  umbrella header "jpush_flutter-umbrella.h"
+
+  export *
+  module * { export * }
+
+  explicit module Test {
+    header "JPushFlutterPlugin_Test.h"
+  }
+}
