@@ -58,6 +58,70 @@
   }
 }
 
+// 开启debug模式
+- (void)setDebugMode:(BOOL) debugMode withCompletionHandler:(FlutterResult)result {
+  if (debugMode) {
+    [JPUSHService setDebugMode];
+  } else {
+    [JPUSHService setLogOFF];
+  }
+  result(nil);
+}
+
+// 隐私监管
+- (void)setAuth:(BOOL) auth withCompletionHandler:(FlutterResult)result {
+  [JGInforCollectionAuth JCollectionAuth:^(JGInforCollectionAuthItems * _Nonnull authInfo) {
+    authInfo.isAuth = auth;
+    result(nil);
+  }];
+}
+
+// 初始化
+- (void)init:(NSString *) appKey withChannel:(NSString *) channel withCompletionHandler:(FlutterResult)result {
+  __block NSString* advertisingId;
+  
+  if (@available(iOS 14, *)) {
+    ATTrackingManagerAuthorizationStatus states = [ATTrackingManager trackingAuthorizationStatus];
+    if (states == ATTrackingManagerAuthorizationStatusNotDetermined) {
+      [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          // 获取到权限后，依然使用老方法获取idfa
+          if (status == ATTrackingManagerAuthorizationStatusAuthorized) {
+            advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+          }
+        });
+      }];
+    } else if (states == ATTrackingManagerAuthorizationStatusAuthorized) {
+      advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+    }
+  } else {
+    advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+  }
+  
+  [JPUSHService setupWithOption:self.launchOptions appKey:appKey channel:channel apsForProduction:YES advertisingIdentifier: advertisingId];
+}
+
+// 控制极光的消息状态。 关闭 PUSH 之后，将接收不到极光通知推送、自定义消息推送、liveActivity 消息推送，默认是开启。
+- (void)setPushEnable:(BOOL)isEnable withCompletionHandler:(FlutterResult)result {
+  [JPUSHService setPushEnable:isEnable completion:^(NSInteger iResCode) {
+    result([NSNumber numberWithInteger:iResCode]);
+  }];
+}
+
+// 设置别名
+- (void)setAliass:(NSInteger) sequence withAlias: (NSString *) alias withCompletionHandler:(FlutterResult)result {
+  [JPUSHService setAlias:alias completion:^(NSInteger iResCode, NSString * _Nullable iAlias, NSInteger seq) {
+    result([NSNumber numberWithInteger:iResCode]);
+  } seq:sequence];
+}
+
+// 删除别名
+- (void)deleteAliass:(NSInteger) sequence withCompletionHandler:(FlutterResult)result {
+  [JPUSHService deleteAlias:^(NSInteger iResCode, NSString * _Nullable iAlias, NSInteger seq) {
+    result([NSNumber numberWithInteger:iResCode]);
+  } seq:sequence];
+}
+ 
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
   
 }
@@ -66,6 +130,20 @@
   
 }
 
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+  self.launchOptions = launchOptions;
+  //Required
+  //notice: 3.0.0 及以后版本注册可以这样写，也可以继续用之前的注册方式
+  JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
+  entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
+  if ([[UIDevice currentDevice].systemVersion floatValue] >= 8.0) {
+    // 可以添加自定义 categories
+    // NSSet<UNNotificationCategory *> *categories for iOS10 or later
+    // NSSet<UIUserNotificationCategory *> *categories for iOS8 and iOS9
+  }
+  [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
+  return YES;
+}
 
 - (UIViewController *)topViewController {
 #pragma clang diagnostic push
