@@ -25,6 +25,9 @@ public class OpenClickActivity : Activity() {
     /**通知内容 */
     private val KEY_CONTENT = "n_content"
 
+    /** */
+    private val KEY_BADGE = "n_badge_add_num"
+
     /**通知附加字段 */
     private val KEY_EXTRAS = "n_extras"
 
@@ -57,34 +60,17 @@ public class OpenClickActivity : Activity() {
             val mapData = objectMapper.readValue(data, object : TypeReference<Map<String, Any?>?>() {})
             val title = mapData?.get(KEY_TITLE)
             val body = mapData?.get(KEY_CONTENT)
-            val badge = mapData?.get("n_badge_add_num")
-            val nExtras = mapData?.get(KEY_EXTRAS) as Map<String, Any?>?
-            val templateKey = nExtras?.get("templateKey")
-            val userId = nExtras?.get("userId")
-            val bizSubName = nExtras?.get("bizSubName")
-            val bizSubId = nExtras?.get("bizSubId")
-            val expertsServiceId = nExtras?.get("expertsServiceId")
+            val badge = mapData?.get(KEY_BADGE)
+            val extras = mapData?.get(KEY_EXTRAS) as Map<String, Any?>?
             val response: MutableMap<String, Any?> = HashMap()
-            val extras: MutableMap<String, Any?> = HashMap()
             response["title"] = title
             response["body"] = body
             response["badge"] = badge
-            extras["templateKey"] = templateKey
-            extras["userId"] = userId
-            extras["bizSubName"] = bizSubName
-            extras["bizSubId"] = bizSubId
-            extras["expertsServiceId"] = expertsServiceId
             response["extras"] = extras
             val mHandler = Handler(Looper.getMainLooper())
             val r = Runnable { //do something
                 Log.v(TAG, "[OpenClickActivity]: notificationClick-----")
                 val channel = JPushHelper.getInstance().channel
-//                val activity = JPushHelper.getInstance().activity
-//                val context = JPushHelper.getInstance().context
-//                val intent = Intent(context, activity.javaClass)
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                context.startActivity(intent)
-//                finish()
                 channel?.invokeMethod("notificationClick", objectMapper.writeValueAsString(response))
             }
             //主线程中调用：
