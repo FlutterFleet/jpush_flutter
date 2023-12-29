@@ -1,3 +1,6 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -32,6 +35,10 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
 
   @override
   Future<int?> registerToken(String appId, String channel) {
+    if (Platform.isIOS) {
+      log('[JPushFlutter]: The registerToken method is not supported on ios.');
+      return Future.value();
+    }
     return methodChannel.invokeMethod<int>('registerToken', {
       'appId': appId,
       'channel': channel,
@@ -40,16 +47,28 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
 
   @override
   Future<int?> unRegisterToken() {
+    if (Platform.isIOS) {
+      log('[JPushFlutter]: The unRegisterToken method is not supported on ios.');
+      return Future.value();
+    }
     return methodChannel.invokeMethod<int>('unRegisterToken');
   }
 
   @override
   Future<int?> turnOffPush() {
+    if (Platform.isIOS) {
+      log('[JPushFlutter]: The turnOffPush method is not supported on ios.');
+      return Future.value();
+    }
     return methodChannel.invokeMethod<int>('turnOffPush');
   }
 
   @override
   Future<int?> turnOnPush() {
+    if (Platform.isIOS) {
+      log('[JPushFlutter]: The turnOnPush method is not supported on ios.');
+      return Future.value();
+    }
     return methodChannel.invokeMethod<int>('turnOnPush');
   }
 
@@ -73,6 +92,10 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
 
   @override
   Future<bool?> isPushStopped() {
+    if (Platform.isIOS) {
+      log('[JPushFlutter]: The isPushStopped method is not supported on ios.');
+      return Future.value();
+    }
     return methodChannel.invokeMethod<bool>('isPushStopped');
   }
 
