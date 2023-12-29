@@ -1,4 +1,7 @@
 #import "JPushFlutterPlugin.h"
+// 引入 JPush 功能所需头文件
+#import <JGInforCollectionAuth.h>
+#import <JPUSHService.h>
 
 @interface JPushFlutterPlugin () <JPUSHRegisterDelegate>
 
@@ -26,33 +29,98 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"show" isEqualToString:call.method]) {
-    id arguments = call.arguments;
+  id arguments = call.arguments;
+
+  if ([@"setDebugMode" isEqualToString:call.method]) {
     if (arguments == nil) {
-      NSLog(@"hCaptcha配置为空");
+      NSLog(@"Configuration must not be nil");
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
-      NSLog(@"hCaptcha配置必须为字典类型");
+      NSLog(@"Configuration must be of dictionary type");
       return;
     }
 
     NSMutableDictionary *config = (NSMutableDictionary *) arguments;
-    id siteKey = [config objectForKey:@"siteKey"];
-    id language = [config objectForKey:@"language"];
-    if (siteKey == nil || [@"" isEqualToString:siteKey]) {
-      NSLog(@"hCaptcha验证码配置中siteKey字段为空");
+    BOOL debugMode = [[config objectForKey:@"debugMode"] boolValue];
+
+    [self setDebugMode:debugMode withCompletionHandler:result];
+  } else if ([@"setAuth" isEqualToString:call.method]) {
+    if (arguments == nil) {
+      NSLog(@"Configuration must not be nil");
       return;
     }
 
-    if (language == nil || [@"" isEqualToString:language]) {
-      NSLog(@"hCaptcha验证码配置中language字段为空");
-      language = @"en";
+    if (![arguments isKindOfClass: NSMutableDictionary.class]) {
+      NSLog(@"Configuration must be of dictionary type");
+      return;
     }
 
-    
-    result(nil);
+    NSMutableDictionary *config = (NSMutableDictionary *) arguments;
+    BOOL auth = [[config objectForKey:@"auth"] boolValue];
+
+    [self setAuth:auth withCompletionHandler:result];
+  } else if ([@"init" isEqualToString:call.method]) {
+    if (arguments == nil) {
+      NSLog(@"Configuration must not be nil");
+      return;
+    }
+
+    if (![arguments isKindOfClass: NSMutableDictionary.class]) {
+      NSLog(@"Configuration must be of dictionary type");
+      return;
+    }
+
+    NSMutableDictionary *config = (NSMutableDictionary *) arguments;
+    id appKey = [config objectForKey:@"appKey"];
+    id channel = [config objectForKey:@"channel"];
+    if (appKey == nil || [@"" isEqualToString:appKey]) {
+      NSLog(@"appKey must not be nil");
+      return;
+    }
+
+    if (channel == nil || [@"" isEqualToString:channel]) {
+      NSLog(@"channel must not be nil");
+      return;
+    }
+
+    [self init:appKey withChannel:channel withCompletionHandler:result];
+  } else if ([@"stopPush" isEqualToString:call.method]) {
+    [self setPushEnable:NO withCompletionHandler:result];
+  } else if ([@"resumePush" isEqualToString:call.method]) {
+    [self setPushEnable:YES withCompletionHandler:result];
+  } else if ([@"setAlias" isEqualToString:call.method]) {
+    if (arguments == nil) {
+      NSLog(@"Configuration must not be nil");
+      return;
+    }
+
+    if (![arguments isKindOfClass: NSMutableDictionary.class]) {
+      NSLog(@"Configuration must be of dictionary type");
+      return;
+    }
+
+    NSMutableDictionary *config = (NSMutableDictionary *) arguments;
+    NSInteger sequence = [[config objectForKey:@"sequence"] integerValue];
+    id alias = [config objectForKey:@"alias"];
+
+    [self setAliass:sequence withAlias:alias withCompletionHandler:result];
+  } else if ([@"deleteAlias" isEqualToString:call.method]) {
+    if (arguments == nil) {
+      NSLog(@"Configuration must not be nil");
+      return;
+    }
+
+    if (![arguments isKindOfClass: NSMutableDictionary.class]) {
+      NSLog(@"Configuration must be of dictionary type");
+      return;
+    }
+
+    NSMutableDictionary *config = (NSMutableDictionary *) arguments;
+    NSInteger sequence = [[config objectForKey:@"sequence"] integerValue];
+
+    [self deleteAliass:sequence withCompletionHandler:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -79,7 +147,7 @@
 // 初始化
 - (void)init:(NSString *) appKey withChannel:(NSString *) channel withCompletionHandler:(FlutterResult)result {
   __block NSString* advertisingId;
-  
+
   if (@available(iOS 14, *)) {
     ATTrackingManagerAuthorizationStatus states = [ATTrackingManager trackingAuthorizationStatus];
     if (states == ATTrackingManagerAuthorizationStatusNotDetermined) {
@@ -97,8 +165,14 @@
   } else {
     advertisingId = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
   }
-  
+
   [JPUSHService setupWithOption:self.launchOptions appKey:appKey channel:channel apsForProduction:YES advertisingIdentifier: advertisingId];
+
+  [JPUSHService registrationIDCompletionHandler:^(int resCode, NSString *registrationID) {
+    NSLog(@"resCode : %d, registrationID: %@", resCode, registrationID);
+  }];
+
+  result(nil);
 }
 
 // 控制极光的消息状态。 关闭 PUSH 之后，将接收不到极光通知推送、自定义消息推送、liveActivity 消息推送，默认是开启。
@@ -121,24 +195,99 @@
     result([NSNumber numberWithInteger:iResCode]);
   } seq:sequence];
 }
- 
+
+// iOS 10 Support
+// iOS 设备收到通知推送（APNs ），用户点击推送通知打开应用时，应用程序根据运行状态进行不同处理
+// 1. App 在前台运行
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(NSInteger))completionHandler {
+  // Required
+  NSDictionary * userInfo = notification.request.content.userInfo;
+  if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+    [JPUSHService handleRemoteNotification:userInfo];
+  }
   
+  UNNotificationRequest* request = notification.request; // 收到推送的请求
+  UNNotificationContent* content = request.content; // 收到推送的消息内容
+  NSString* title = content.title;
+  NSString* subtitle = content.subtitle;
+  NSString* body = content.body;
+  NSNumber* badge = content.badge;
+  
+  NSMutableDictionary* data = [[NSMutableDictionary alloc] init];
+  [data setValue:title forKey:@"title"];
+  [data setValue:subtitle forKey:@"subtitle"];
+  [data setValue:body forKey:@"body"];
+  [data setValue:badge forKey:@"badge"];
+  [data setObject:userInfo forKey:@"extras"];
+  
+  NSString *jsonString = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:data options:NSJSONWritingPrettyPrinted error:nil] encoding:NSUTF8StringEncoding];
+  
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self.channel != nil) {
+      [self.channel invokeMethod:@"notificationClick" arguments:jsonString];
+    }
+  });
+  
+  completionHandler(UNNotificationPresentationOptionAlert| UNNotificationPresentationOptionSound | UNNotificationPresentationOptionBadge); // 需要执行这个方法，选择是否提醒用户，有 Badge、Sound、Alert 三种类型可以选择设置
 }
 
+// iOS 10 Support
+// 2. App 在后台时（需要点击通知才能触发回调）
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
+  // Required
+  NSDictionary * userInfo = response.notification.request.content.userInfo;
+  if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+    [JPUSHService handleRemoteNotification:userInfo];
+  }
   
+  UNNotificationRequest* request = response.notification.request; // 收到推送的请求
+  UNNotificationContent* content = request.content; // 收到推送的消息内容
+  NSString* title = content.title;
+  NSString* subtitle = content.subtitle;
+  NSString* body = content.body;
+  NSNumber* badge = content.badge;
+  
+  NSMutableDictionary* data = [[NSMutableDictionary alloc] init];
+  [data setValue:title forKey:@"title"];
+  [data setValue:subtitle forKey:@"subtitle"];
+  [data setValue:body forKey:@"body"];
+  [data setValue:badge forKey:@"badge"];
+  [data setObject:userInfo forKey:@"extras"];
+  
+  NSString *jsonString = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:data options:NSJSONWritingPrettyPrinted error:nil] encoding:NSUTF8StringEncoding];
+  
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self.channel != nil) {
+      [self.channel invokeMethod:@"notificationClick" arguments:jsonString];
+    }
+  });
+  
+  completionHandler();    // 系统要求执行这个方法
 }
 
+#ifdef __IPHONE_12_0
 - (void)jpushNotificationCenter:(UNUserNotificationCenter *)center openSettingsForNotification:(UNNotification *)notification {
-  
+  NSString *title = nil;
+  if (notification) {
+    title = @"从通知界面直接进入应用";
+  }else{
+    title = @"从系统设置界面进入应用";
+  }
+  NSLog(@"%@", title);
+}
+#endif
+
+- (void)jpushNotificationAuthorization:(JPAuthorizationStatus)status withInfo:(nullable NSDictionary *)info {
+  NSLog(@"receive notification authorization status:%lu, info:%@", status, info);
 }
 
-- (void)jpushNotificationAuthorization:(JPAuthorizationStatus)status withInfo:(nullable NSDictionary *)info { 
-  
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  NSLog(@"deviceToken: %@", deviceToken);
+  //sdk注册DeviceToken
+  [JPUSHService registerDeviceToken:deviceToken];
 }
 
-
+// 3. App 未启动状态（需要点击通知才能触发回调）
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   self.launchOptions = launchOptions;
   //Required
@@ -151,45 +300,31 @@
     // NSSet<UIUserNotificationCategory *> *categories for iOS8 and iOS9
   }
   [JPUSHService registerForRemoteNotificationConfig:entity delegate:self];
+  
+  if (launchOptions != nil) {
+    NSDictionary *remoteNotification = [launchOptions objectForKey: UIApplicationLaunchOptionsRemoteNotificationKey];
+    NSDictionary *aps = [remoteNotification objectForKey:@"aps"];
+    NSNumber *badge = [remoteNotification valueForKey:@"badge"];
+    NSDictionary *alert = [aps objectForKey:@"alert"];
+    NSString *title = [alert valueForKey:@"title"];
+    NSString *body = [alert valueForKey:@"body"];
+    
+    NSMutableDictionary* data = [[NSMutableDictionary alloc] init];
+    [data setValue:title forKey:@"title"];
+    [data setValue:body forKey:@"body"];
+    [data setValue:badge forKey:@"badge"];
+    [data setObject:remoteNotification forKey:@"extras"];
+    
+    NSString *jsonString = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:data options:NSJSONWritingPrettyPrinted error:nil] encoding:NSUTF8StringEncoding];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (self.channel != nil) {
+        [self.channel invokeMethod:@"notificationClick" arguments:jsonString];
+      }
+    });
+  }
+  
   return YES;
-}
-
-- (UIViewController *)topViewController {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  // TODO(stuartmorgan) Provide a non-deprecated codepath. See
-  // https://github.com/flutter/flutter/issues/104117
-  return [self topViewControllerFromViewController:[UIApplication sharedApplication]
-                                                       .keyWindow.rootViewController];
-#pragma clang diagnostic pop
-}
-
-/**
- * This method recursively iterate through the view hierarchy
- * to return the top most view controller.
- *
- * It supports the following scenarios:
- *
- * - The view controller is presenting another view.
- * - The view controller is a UINavigationController.
- * - The view controller is a UITabBarController.
- *
- * @return The top most view controller.
- */
-- (UIViewController *)topViewControllerFromViewController:(UIViewController *)viewController {
-  if ([viewController isKindOfClass:[UINavigationController class]]) {
-    UINavigationController *navigationController = (UINavigationController *)viewController;
-    return [self
-        topViewControllerFromViewController:[navigationController.viewControllers lastObject]];
-  }
-  if ([viewController isKindOfClass:[UITabBarController class]]) {
-    UITabBarController *tabController = (UITabBarController *)viewController;
-    return [self topViewControllerFromViewController:tabController.selectedViewController];
-  }
-  if (viewController.presentedViewController) {
-    return [self topViewControllerFromViewController:viewController.presentedViewController];
-  }
-  return viewController;
 }
 
 @end

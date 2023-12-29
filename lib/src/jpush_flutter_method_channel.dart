@@ -100,16 +100,16 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
   }
 
   @override
-  Future<void> setAlias(int sequence, String alias) {
-    return methodChannel.invokeMethod<void>('setAlias', {
+  Future<int?> setAlias(int sequence, String alias) {
+    return methodChannel.invokeMethod<int>('setAlias', {
       'sequence': sequence,
       'alias': alias,
     });
   }
 
   @override
-  Future<void> deleteAlias(int sequence) {
-    return methodChannel.invokeMethod<void>('deleteAlias', {
+  Future<int?> deleteAlias(int sequence) {
+    return methodChannel.invokeMethod<int>('deleteAlias', {
       'sequence': sequence,
     });
   }

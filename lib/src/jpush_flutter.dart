@@ -58,12 +58,12 @@ class JPushFlutter {
   }
 
   // 设置别名
-  static Future<void> setAlias(int sequence, String alias) {
+  static Future<int?> setAlias(int sequence, String alias) {
     return JPushFlutterPlatform.instance.setAlias(sequence, alias);
   }
 
   // 删除别名
-  static Future<void> deleteAlias(int sequence) {
+  static Future<int?> deleteAlias(int sequence) {
     return JPushFlutterPlatform.instance.deleteAlias(sequence);
   }
 }

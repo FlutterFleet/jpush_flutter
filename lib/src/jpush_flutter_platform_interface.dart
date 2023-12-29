@@ -48,7 +48,7 @@ abstract class JPushFlutterPlatform extends PlatformInterface {
 
   Future<bool?> isPushStopped();
 
-  Future<void> setAlias(int sequence, String alias);
+  Future<int?> setAlias(int sequence, String alias);
 
-  Future<void> deleteAlias(int sequence);
+  Future<int?> deleteAlias(int sequence);
 }

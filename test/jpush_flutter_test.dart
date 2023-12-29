@@ -42,10 +42,10 @@ class MockJPushFlutterPlatform
   Future<bool> isPushStopped() => Future.value(true);
 
   @override
-  Future<void> setAlias(int sequence, String alias) => Future.value();
+  Future<int?> setAlias(int sequence, String alias) => Future.value(0);
 
   @override
-  Future<void> deleteAlias(int sequence) => Future.value();
+  Future<int?> deleteAlias(int sequence) => Future.value(0);
 }
 
 void main() {
