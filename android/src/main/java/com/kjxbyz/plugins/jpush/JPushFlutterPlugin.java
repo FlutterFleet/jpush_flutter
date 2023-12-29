@@ -304,6 +304,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void setAuth(boolean auth, MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[setAuth]: context is null");
+                result.error(METHOD_SET_AUTH, "[setAuth]: context is null", null);
                 return;
             }
             try {
@@ -318,6 +319,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void registerToken(String appId, String channel, MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[registerToken]: context is null");
+                result.error(METHOD_REGISTER_TOKEN, "[registerToken]: context is null", null);
                 return;
             }
             try {
@@ -337,6 +339,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void unRegisterToken(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[unRegisterToken]: context is null");
+                result.error(METHOD_UNREGISTER_TOKEN, "[unRegisterToken]: context is null", null);
                 return;
             }
             try {
@@ -353,6 +356,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void turnOffPush(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[turnOffPush]: context is null");
+                result.error(METHOD_TURN_OFF_PUSH, "[turnOffPush]: context is null", null);
                 return;
             }
             try {
@@ -369,6 +373,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void turnOnPush(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[turnOnPush]: context is null");
+                result.error(METHOD_TURN_ON_PUSH, "[turnOnPush]: context is null", null);
                 return;
             }
             try {
@@ -385,6 +390,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void init(String appKey, String channel, MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[init]: context is null");
+                result.error(METHOD_INIT, "[init]: context is null", null);
                 return;
             }
             try {
@@ -408,6 +414,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void stopPush(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[stopPush]: context is null");
+                result.error(METHOD_STOP_PUSH, "[stopPush]: context is null", null);
                 return;
             }
             try {
@@ -422,6 +429,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void resumePush(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[resumePush]: context is null");
+                result.error(METHOD_RESUME_PUSH, "[resumePush]: context is null", null);
                 return;
             }
             try {
@@ -436,6 +444,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void isPushStopped(MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[isPushStopped]: context is null");
+                result.error(METHOD_IS_PUSH_STOPPED, "[isPushStopped]: context is null", null);
                 return;
             }
             try {
@@ -450,6 +459,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void setAlias(int sequence, String alias, MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[setAlias]: context is null");
+                result.error(METHOD_SET_ALIAS, "[setAlias]: context is null", null);
                 return;
             }
             try {
@@ -464,6 +474,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         public void deleteAlias(int sequence, MethodChannel.Result result) {
             if (this.context == null) {
                 Log.e(TAG, "[deleteAlias]: context is null");
+                result.error(METHOD_DELETE_ALIAS, "[deleteAlias]: context is null", null);
                 return;
             }
             try {
