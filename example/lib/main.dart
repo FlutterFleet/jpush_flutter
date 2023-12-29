@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -7,13 +9,6 @@ import 'package:permission_handler/permission_handler.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  JPushFlutter.setMethodCallHandler((call) async {
-    if (call.method == 'notificationClick') {
-      if (kDebugMode) {
-        print('setMethodCallHandler: ${call.arguments}');
-      }
-    }
-  });
   JPushFlutter.setDebugMode(debugMode: true);
   JPushFlutter.init('cd04621e5858bdfffb42bad6', 'developer-default');
 
@@ -28,12 +23,24 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String? args;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await Permission.notification.request();
+      if (Platform.isIOS) {
+        await Permission.appTrackingTransparency.request();
+      }
+      JPushFlutter.setMethodCallHandler((call) async {
+        if (call.method == 'notificationClick') {
+          if (kDebugMode) {
+            print('setMethodCallHandler: ${call.arguments}');
+            setState(() => args = call.arguments);
+          }
+        }
+      });
     });
   }
 
@@ -44,11 +51,15 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('JPushPlugin Example'),
         ),
-        body: const Center(
-          child: Text('JPush Flutter Plugin'),
+        body: Center(
+          child: Column(
+            children: [
+              const Text('JPush Flutter Plugin'),
+              Text(args ?? ''),
+            ],
+          ),
         ),
       ),
     );
   }
-
 }

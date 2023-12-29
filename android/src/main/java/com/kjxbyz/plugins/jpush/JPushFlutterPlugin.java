@@ -454,7 +454,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
             }
             try {
                 JPushInterface.setAlias(this.context, sequence, alias);
-                result.success(null);
+                result.success(0);
             } catch (Exception e) {
                 result.error(METHOD_SET_ALIAS, e.getMessage(), e.getStackTrace());
             }
@@ -468,7 +468,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
             }
             try {
                 JPushInterface.deleteAlias(this.context, sequence);
-                result.success(null);
+                result.success(0);
             } catch (Exception e) {
                 result.error(METHOD_DELETE_ALIAS, e.getMessage(), e.getStackTrace());
             }
