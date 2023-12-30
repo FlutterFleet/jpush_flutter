@@ -9,19 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kjxbyz.plugins.jpush.helper.JPushHelper;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 import cn.jiguang.api.utils.JCollectionAuth;
 import cn.jpush.android.api.JPushInterface;
 import cn.jpush.android.data.JPushConfig;
 import cn.jpush.android.ups.JPushUPSManager;
-import cn.jpush.android.ups.TokenResult;
-import cn.jpush.android.ups.UPSTurnCallBack;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -325,7 +320,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
             try {
                 JPushUPSManager.registerToken(this.context, appId, null, "", tokenResult -> {
                     Log.i(TAG, "[registerToken]: token is " + tokenResult.getToken() + ", code is " + tokenResult.getReturnCode() + ", type is " + tokenResult.getActionType());
-                    if (tokenResult.getReturnCode() == 0 && channel != null && !channel.isEmpty()) {
+                    if (tokenResult.getReturnCode() == 0 && !StringUtils.isEmpty(channel)) {
                         JPushInterface.setChannel(this.context, channel);
                     }
                     result.success(tokenResult.getReturnCode());
@@ -394,14 +389,14 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 return;
             }
             try {
-                if (appKey != null && !appKey.trim().isEmpty()) {
+                if (!StringUtils.isEmpty(appKey)) {
                     JPushConfig config = new JPushConfig();
                     config.setjAppKey(appKey);
                     JPushInterface.init(this.context, config);
                 } else {
                     JPushInterface.init(this.context);
                 }
-                if (appKey != null && !appKey.trim().isEmpty()) {
+                if (!StringUtils.isEmpty(channel)) {
                     JPushInterface.setChannel(this.context, channel);
                 }
                 result.success(null);

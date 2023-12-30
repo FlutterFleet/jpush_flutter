@@ -3,6 +3,8 @@
 #import <JGInforCollectionAuth.h>
 #import <JPUSHService.h>
 
+NSString * const FlutterMethodCallBadRequest = @"FlutterMethodCallBadRequest";
+
 @interface JPushFlutterPlugin () <JPUSHRegisterDelegate>
 
 @property(strong, readonly) FlutterMethodChannel *channel;
@@ -34,11 +36,13 @@
   if ([@"setDebugMode" isEqualToString:call.method]) {
     if (arguments == nil) {
       NSLog(@"Configuration must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must not be nil" details:nil]);
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
       NSLog(@"Configuration must be of dictionary type");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must be of dictionary type" details:nil]);
       return;
     }
 
@@ -49,11 +53,13 @@
   } else if ([@"setAuth" isEqualToString:call.method]) {
     if (arguments == nil) {
       NSLog(@"Configuration must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must not be nil" details:nil]);
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
       NSLog(@"Configuration must be of dictionary type");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must be of dictionary type" details:nil]);
       return;
     }
 
@@ -64,11 +70,13 @@
   } else if ([@"init" isEqualToString:call.method]) {
     if (arguments == nil) {
       NSLog(@"Configuration must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must not be nil" details:nil]);
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
       NSLog(@"Configuration must be of dictionary type");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must be of dictionary type" details:nil]);
       return;
     }
 
@@ -77,11 +85,13 @@
     id channel = [config objectForKey:@"channel"];
     if (appKey == nil || [@"" isEqualToString:appKey]) {
       NSLog(@"appKey must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"appKey must not be nil" details:nil]);
       return;
     }
 
     if (channel == nil || [@"" isEqualToString:channel]) {
       NSLog(@"channel must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"channel must not be nil" details:nil]);
       return;
     }
 
@@ -93,11 +103,13 @@
   } else if ([@"setAlias" isEqualToString:call.method]) {
     if (arguments == nil) {
       NSLog(@"Configuration must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must not be nil" details:nil]);
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
       NSLog(@"Configuration must be of dictionary type");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must be of dictionary type" details:nil]);
       return;
     }
 
@@ -109,11 +121,13 @@
   } else if ([@"deleteAlias" isEqualToString:call.method]) {
     if (arguments == nil) {
       NSLog(@"Configuration must not be nil");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must not be nil" details:nil]);
       return;
     }
 
     if (![arguments isKindOfClass: NSMutableDictionary.class]) {
       NSLog(@"Configuration must be of dictionary type");
+      result([FlutterError errorWithCode:FlutterMethodCallBadRequest message:@"Configuration must be of dictionary type" details:nil]);
       return;
     }
 
