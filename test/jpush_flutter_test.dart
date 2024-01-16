@@ -33,6 +33,9 @@ class MockJPushFlutterPlatform
   Future<void> init(String appKey, String channel) => Future.value();
 
   @override
+  Future<String?> getRegistrationID() => Future.value();
+
+  @override
   Future<void> stopPush() => Future.value();
 
   @override
