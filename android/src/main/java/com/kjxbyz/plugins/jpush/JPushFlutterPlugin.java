@@ -31,6 +31,7 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     private static final String METHOD_SET_DEBUG_MODE = "setDebugMode";
     private static final String METHOD_SET_AUTH = "setAuth";
     private static final String METHOD_INIT = "init";
+    private static final String METHOD_GET_REGISTRATION_ID = "getRegistrationID";
     private static final String METHOD_REGISTER_TOKEN = "registerToken";
     private static final String METHOD_UNREGISTER_TOKEN = "unRegisterToken";
     private static final String METHOD_TURN_OFF_PUSH = "turnOffPush";
@@ -157,6 +158,9 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 String channel = call.argument("channel");
                 delegate.init(appKey, channel, result);
                 break;
+            case METHOD_GET_REGISTRATION_ID:
+                delegate.getRegistrationID(result);
+                break;
             case METHOD_STOP_PUSH:
                 delegate.stopPush(result);
                 break;
@@ -220,6 +224,12 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
          * 注：如使用该接口配置 AppKey 进行初始化，则 build.gradle 文件中 JPUSH_APPKEY 则不需再配置，即 JPUSH_APPKEY : ""。.
          */
         public void init(String appKey, String channel, MethodChannel.Result result);
+
+        /**
+         * 获取 Registration ID
+         * @param result
+         */
+        public void getRegistrationID(MethodChannel.Result result);
 
         /**
          * 调用了本 API 后，JPush 推送服务完全被停止.
@@ -402,6 +412,20 @@ public class JPushFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 result.success(null);
             } catch (Exception e) {
                 result.error(METHOD_INIT, e.getMessage(), e.getStackTrace());
+            }
+        }
+
+        public void getRegistrationID(MethodChannel.Result result) {
+            if (this.context == null) {
+                Log.e(TAG, "[getRegistrationID]: context is null");
+                result.error(METHOD_GET_REGISTRATION_ID, "[getRegistrationID]: context is null", null);
+                return;
+            }
+            try {
+                String registrationID = JPushInterface.getRegistrationID(this.context);
+                result.success(registrationID);
+            } catch (Exception e) {
+                result.error(METHOD_GET_REGISTRATION_ID, e.getMessage(), e.getStackTrace());
             }
         }
 

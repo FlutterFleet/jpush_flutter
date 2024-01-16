@@ -42,6 +42,8 @@ abstract class JPushFlutterPlatform extends PlatformInterface {
 
   Future<void> init(String appKey, String channel);
 
+  Future<String?> getRegistrationID();
+
   Future<void> stopPush();
 
   Future<void> resumePush();

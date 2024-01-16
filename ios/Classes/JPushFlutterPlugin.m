@@ -96,6 +96,8 @@ NSString * const FlutterMethodCallBadRequest = @"FlutterMethodCallBadRequest";
     }
 
     [self init:appKey withChannel:channel withCompletionHandler:result];
+  } else if ([@"getRegistrationID" isEqualToString:call.method]) {
+    [self getRegistrationID:result];
   } else if ([@"stopPush" isEqualToString:call.method]) {
     [self setPushEnable:NO withCompletionHandler:result];
   } else if ([@"resumePush" isEqualToString:call.method]) {
@@ -187,6 +189,14 @@ NSString * const FlutterMethodCallBadRequest = @"FlutterMethodCallBadRequest";
   }];
 
   result(nil);
+}
+
+// 获取 Registration ID
+- (void)getRegistrationID: (FlutterResult)result {
+  [JPUSHService registrationIDCompletionHandler:^(int resCode, NSString *registrationID) {
+    NSLog(@"resCode : %d, registrationID: %@",resCode,registrationID);
+    result(registrationID);
+  }];
 }
 
 // 控制极光的消息状态。 关闭 PUSH 之后，将接收不到极光通知推送、自定义消息推送、liveActivity 消息推送，默认是开启。

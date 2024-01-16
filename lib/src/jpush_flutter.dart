@@ -42,6 +42,11 @@ class JPushFlutter {
     return JPushFlutterPlatform.instance.init(appKey, channel);
   }
 
+  // 获取 Registration ID
+  static Future<String?> getRegistrationID() {
+    return JPushFlutterPlatform.instance.getRegistrationID();
+  }
+
   // 停止推送服务
   static Future<void> stopPush() {
     return JPushFlutterPlatform.instance.stopPush();

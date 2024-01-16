@@ -81,6 +81,11 @@ class MethodChannelJPushFlutter extends JPushFlutterPlatform {
   }
 
   @override
+  Future<String?> getRegistrationID() {
+    return methodChannel.invokeMethod<String>('getRegistrationID');
+  }
+
+  @override
   Future<void> stopPush() {
     return methodChannel.invokeMethod<void>('stopPush');
   }
